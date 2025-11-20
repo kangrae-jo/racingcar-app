@@ -6,8 +6,9 @@ class Dice {
 
     private var number: Int = 0
 
-    fun reroll() {
+    fun reroll(): Int {
         number = Randoms.pickNumberInRange(START_INCLUSIVE, END_INCLUSIVE)
+        return number
     }
 
     fun canMove(threshold: Int): Boolean = number >= threshold

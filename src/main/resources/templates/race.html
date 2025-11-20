@@ -4,158 +4,420 @@
     <meta charset="UTF-8"/>
     <title>레이싱카 게임</title>
     <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7fa;
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f6f7fb, #fefefe);
             margin: 0;
             padding: 0;
+            color: #1f1f39;
+            min-height: 100vh;
+        }
+
+        @keyframes diceRoll {
+            0% {
+                transform: rotate(0) scale(1);
+            }
+            25% {
+                transform: rotate(90deg) scale(1.15);
+            }
+            50% {
+                transform: rotate(180deg) scale(0.95);
+            }
+            75% {
+                transform: rotate(270deg) scale(1.05);
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
         }
 
         .container {
-            max-width: 720px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 960px;
+            margin: 2.5rem auto;
+            padding: 2.5rem;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(15, 15, 40, 0.08);
         }
 
-        h1, h2 {
+        h1 {
+            margin: 0 0 0.5rem;
+            font-size: 2rem;
+        }
+
+        p {
             margin-top: 0;
-            color: #333;
+            color: #6a6b7c;
         }
 
         form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            align-items: end;
+        }
+
+        form .field {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.35rem;
         }
 
         label {
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.95rem;
         }
 
-        input {
-            padding: 0.65rem 0.8rem;
-            border: 1px solid #cfd7df;
-            border-radius: 6px;
+        input[type="text"],
+        input[type="number"] {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid #dfe4ea;
             font-size: 1rem;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
         }
 
         input:focus {
-            border-color: #6c63ff;
+            border-color: #6b63ff;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(107, 99, 255, 0.25);
         }
 
         button {
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
+            padding: 0.95rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            background-color: #6c63ff;
+            background: linear-gradient(135deg, #6b63ff, #5ed1ff);
             color: #fff;
-            transition: background 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         button:hover {
-            background-color: #5547f0;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(91, 83, 255, 0.25);
         }
 
         .error {
             color: #d7263d;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .alert {
-            margin-top: 1rem;
-            padding: 0.85rem 1rem;
-            border-radius: 6px;
+            margin-top: 1.25rem;
+            padding: 1rem 1.25rem;
             border: 1px solid #ffcdd2;
-            background-color: #ffebee;
+            border-radius: 12px;
+            background-color: #fff4f4;
             color: #b71c1c;
         }
 
-        .round-card {
-            border: 1px solid #e0e4ec;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: #fafbff;
+        .simulator {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            border-radius: 20px;
+            background: #f7f8ff;
+            border: 1px solid #e2e5ff;
         }
 
-        .round-title {
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-            color: #555;
+        .sim-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .car-row {
+        .round-indicator {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .dice-panel {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 0.85rem 1.3rem;
+            box-shadow: inset 0 0 0 1px #ecefff;
+        }
+
+        .dice-visual {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #f0f2ff);
+            box-shadow: 0 8px 18px rgba(59, 53, 156, 0.2);
+            border: 1px solid #dfe2ff;
+        }
+
+        .dice-visual.rolling {
+            animation: diceRoll 0.6s ease;
+        }
+
+        .pip {
+            width: 11px;
+            height: 11px;
+            background: #353563;
+            border-radius: 50%;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .pip.visible {
+            opacity: 1;
+        }
+
+        .pip[data-pip="center"] {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pip[data-pip="top-left"] {
+            top: 15%;
+            left: 20%;
+        }
+
+        .pip[data-pip="top-center"] {
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .pip[data-pip="top-right"] {
+            top: 15%;
+            right: 20%;
+        }
+
+        .pip[data-pip="middle-left"] {
+            top: 50%;
+            left: 20%;
+            transform: translateY(-50%);
+        }
+
+        .pip[data-pip="middle-right"] {
+            top: 50%;
+            right: 20%;
+            transform: translateY(-50%);
+        }
+
+        .pip[data-pip="bottom-left"] {
+            bottom: 15%;
+            left: 20%;
+        }
+
+        .pip[data-pip="bottom-center"] {
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .pip[data-pip="bottom-right"] {
+            bottom: 15%;
+            right: 20%;
+        }
+
+        .dice-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .dice-number {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #6b63ff;
+            min-width: 2.8rem;
+        }
+
+        .dice-status {
+            font-size: 0.95rem;
+            color: #5f6176;
+        }
+
+        .lanes {
+            margin-top: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .lane-wrapper {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 0.35rem;
         }
 
-        .car-name {
-            width: 70px;
-            font-weight: bold;
-            color: #333;
+        .car-label {
+            width: 72px;
+            font-weight: 700;
+            color: #3f3f63;
         }
 
-        .track {
-            flex: 1;
-            height: 8px;
-            background-color: #e9ecf5;
-            border-radius: 999px;
+        .lane {
             position: relative;
-        }
-
-        .marker {
-            position: absolute;
-            top: -3px;
-            height: 14px;
-            background: linear-gradient(90deg, #6c63ff, #5ed1ff);
+            flex: 1;
+            height: 50px;
             border-radius: 999px;
+            background: linear-gradient(90deg, #ffffff, #eef1ff);
+            box-shadow: inset 0 0 0 1px #e0e3ff;
+            overflow: hidden;
         }
 
-        .distance {
-            font-size: 0.85rem;
-            color: #666;
-            min-width: 40px;
+        .start-line,
+        .finish-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: repeating-linear-gradient(
+                    180deg,
+                    rgba(36, 34, 74, 0.75),
+                    rgba(36, 34, 74, 0.75) 8px,
+                    transparent 8px,
+                    transparent 16px
+            );
+        }
+
+        .start-line {
+            left: 16px;
+        }
+
+        .start-line::after {
+            content: 'START';
+            position: absolute;
+            top: 6px;
+            left: -18px;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: #a1a3c9;
+        }
+
+        .finish-line {
+            right: 16px;
+        }
+
+        .finish-line::after {
+            content: 'GOAL';
+            position: absolute;
+            top: 6px;
+            right: -18px;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: #a1a3c9;
+        }
+
+        .car-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translate(0, -50%);
+            width: 52px;
+            height: 36px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(92, 100, 255, 0.2);
+            box-shadow: 0 12px 18px rgba(15, 23, 71, 0.2);
+            transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .position-text {
+            width: 70px;
             text-align: right;
+            font-weight: 600;
+            color: #6b63ff;
         }
 
         .winners {
             margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e0e4ec;
+            padding-top: 1.2rem;
+            border-top: 1px solid #dfe2ff;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        .winner-name {
-            display: inline-block;
-            background-color: #eef1ff;
-            color: #4b4dff;
-            padding: 0.35rem 0.6rem;
+        .winner-chip {
+            padding: 0.35rem 0.9rem;
+            background: rgba(107, 99, 255, 0.1);
             border-radius: 999px;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
+            color: #4b4dff;
+            font-weight: 600;
+        }
+
+        .winner-placeholder {
+            font-size: 0.95rem;
+            color: #8587a3;
+        }
+
+        .winner-names {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .winner-names.visible {
+            display: flex;
+        }
+
+        #replayButton {
+            background: #15172c;
+        }
+
+        #replayButton:hover {
+            box-shadow: 0 10px 20px rgba(21, 23, 44, 0.35);
+        }
+
+        @media (max-width: 720px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+
+            .lane-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .position-text {
+                text-align: left;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>레이싱카 게임</h1>
-    <p>자동차 이름(최대 5글자)을 쉼표로 구분해 입력하고 라운드를 선택한 뒤 경주를 실행해보세요.</p>
+    <p>자동차 이름(최대 5글자)을 쉼표로 구분하고 라운드를 선택한 뒤, 주사위를 굴리듯 경주를 즐겨보세요.</p>
 
     <form th:action="@{/race}" th:object="${request}" method="post">
-        <div>
+        <div class="field">
             <label for="carNames">자동차 이름</label>
             <input id="carNames" type="text" th:field="*{carNames}" placeholder="pobi,woni,jun"/>
             <div class="error" th:if="${#fields.hasErrors('carNames')}" th:errors="*{carNames}">자동차 이름 오류</div>
         </div>
-        <div>
+        <div class="field">
             <label for="totalRound">라운드 수</label>
             <input id="totalRound" type="number" min="1" max="1000" th:field="*{totalRound}" placeholder="5"/>
             <div class="error" th:if="${#fields.hasErrors('totalRound')}" th:errors="*{totalRound}">라운드 입력 오류</div>
@@ -165,24 +427,196 @@
 
     <div class="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">문제가 발생했습니다.</div>
 
-    <div class="results" th:if="${result != null}">
-        <h2>라운드 결과</h2>
-        <div th:each="round : ${result.rounds}" class="round-card">
-            <div class="round-title" th:text="|Round ${round.round}|">Round</div>
-            <div th:each="car : ${round.cars}" class="car-row">
-                <span class="car-name" th:text="${car.name}">pobi</span>
-                <div class="track">
-                    <div class="marker" th:style="'width:' + (${car.position} * 20) + 'px'"></div>
+    <div class="simulator" th:if="${result != null}">
+        <div class="sim-header">
+            <div class="round-indicator" id="roundIndicator" th:text="|Round 0 / ${result.rounds.size()}|">Round</div>
+            <div class="dice-panel">
+                <div class="dice-visual" id="diceVisual">
+                    <span class="pip" data-pip="top-left"></span>
+                    <span class="pip" data-pip="top-center"></span>
+                    <span class="pip" data-pip="top-right"></span>
+                    <span class="pip" data-pip="middle-left"></span>
+                    <span class="pip" data-pip="center"></span>
+                    <span class="pip" data-pip="middle-right"></span>
+                    <span class="pip" data-pip="bottom-left"></span>
+                    <span class="pip" data-pip="bottom-center"></span>
+                    <span class="pip" data-pip="bottom-right"></span>
                 </div>
-                <span class="distance" th:text="|${car.position}칸|">0칸</span>
+                <div class="dice-info">
+                    <div class="dice-number" id="diceNumber">-</div>
+                    <div class="dice-status" id="diceStatus">시뮬레이션을 준비하세요.</div>
+                </div>
+            </div>
+            <button type="button" id="replayButton">다시 보기</button>
+        </div>
+
+        <div class="lanes" th:if="${#lists.isEmpty(carNames) == false}">
+            <div th:each="name : ${carNames}" class="lane-wrapper">
+                <div class="car-label" th:text="${name}">POBI</div>
+                <div class="lane" th:attr="data-car-lane=${name}">
+                    <div class="start-line"></div>
+                    <div class="finish-line"></div>
+                    <div class="car-icon" th:attr="data-car=${name}">🚗</div>
+                </div>
+                <div class="position-text" th:attr="data-car-pos=${name}">0칸</div>
             </div>
         </div>
 
         <div class="winners">
-            <h2>우승자</h2>
-            <div th:each="winner : ${result.winners}" class="winner-name" th:text="${winner.name}">pobi</div>
+            <strong>우승자</strong>
+            <div class="winner-placeholder" id="winnersPlaceholder">경주가 끝나면 공개됩니다.</div>
+            <div class="winner-names" id="winnerNames">
+                <span th:each="winner : ${result.winners}" class="winner-chip" th:text="${winner.name}">pobi</span>
+            </div>
         </div>
     </div>
 </div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const raceData = [[${result}]];
+/*]]>*/
+</script>
+<script>
+(() => {
+    if (!raceData || !Array.isArray(raceData.rounds) || raceData.rounds.length === 0) {
+        return;
+    }
+
+    const diceNumberEl = document.getElementById('diceNumber');
+    const diceStatusEl = document.getElementById('diceStatus');
+    const diceVisualEl = document.getElementById('diceVisual');
+    const roundIndicatorEl = document.getElementById('roundIndicator');
+    const replayButton = document.getElementById('replayButton');
+    const winnerNamesEl = document.getElementById('winnerNames');
+    const winnersPlaceholderEl = document.getElementById('winnersPlaceholder');
+
+    const pipMap = {
+        0: [],
+        1: ['center'],
+        2: ['top-left', 'bottom-right'],
+        3: ['top-left', 'center', 'bottom-right'],
+        4: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+        5: ['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'],
+        6: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right'],
+    };
+
+    const carElements = {};
+    const positionElements = {};
+    const laneWidths = {};
+
+    document.querySelectorAll('[data-car]').forEach((element) => {
+        const name = element.dataset.car;
+        carElements[name] = element;
+        positionElements[name] = document.querySelector(`[data-car-pos="${name}"]`);
+        const lane = element.closest('[data-car-lane]');
+        if (lane) {
+            laneWidths[name] = Math.max(0, lane.clientWidth - element.clientWidth - 40);
+        }
+    });
+
+    const maxPosition = (raceData.events ?? []).reduce((max, event) => {
+        return Math.max(max, event.toPosition);
+    }, 0) || 1;
+
+    function resetCars() {
+        Object.entries(carElements).forEach(([name, element]) => {
+            element.style.left = '16px';
+            const posEl = positionElements[name];
+            if (posEl) {
+                posEl.textContent = '0칸';
+            }
+        });
+    }
+
+    function updateDiceFace(value) {
+        if (!diceVisualEl) {
+            return;
+        }
+        const normalized = value <= 0 ? 0 : Math.min(value, 6);
+        const active = pipMap[normalized] ?? [];
+        const elements = diceVisualEl.querySelectorAll('.pip');
+        elements.forEach((pip) => {
+            pip.classList.toggle('visible', active.includes(pip.dataset.pip));
+        });
+        diceVisualEl.classList.remove('rolling');
+        // force reflow
+        void diceVisualEl.offsetWidth;
+        diceVisualEl.classList.add('rolling');
+    }
+
+    function playRace() {
+        resetCars();
+        if (winnersPlaceholderEl) {
+            winnersPlaceholderEl.style.display = '';
+        }
+        if (winnerNamesEl) {
+            winnerNamesEl.classList.remove('visible');
+        }
+        const queue = Array.isArray(raceData.events)
+            ? raceData.events.slice()
+            : [];
+        if (queue.length === 0) {
+            return;
+        }
+        let index = 0;
+        let currentRound = 0;
+        const totalRounds = raceData.rounds.length;
+
+        function step() {
+            if (index >= queue.length) {
+                diceNumberEl.textContent = '✔';
+                diceStatusEl.textContent = '경주가 종료되었습니다!';
+                updateDiceFace(0);
+                if (winnersPlaceholderEl) {
+                    winnersPlaceholderEl.style.display = 'none';
+                }
+                if (winnerNamesEl) {
+                    winnerNamesEl.classList.add('visible');
+                }
+                return;
+            }
+
+            const event = queue[index];
+            if (event.round !== currentRound) {
+                currentRound = event.round;
+                roundIndicatorEl.textContent = `Round ${currentRound} / ${totalRounds}`;
+            }
+
+            const moved = event.toPosition > event.fromPosition;
+            const diceNumber = event.diceValue;
+            diceNumberEl.textContent = diceNumber;
+            diceStatusEl.textContent = moved
+                ? `${event.carName} 전진!`
+                : `${event.carName} 정지...`;
+            updateDiceFace(diceNumber);
+
+            const carEl = carElements[event.carName];
+            const posEl = positionElements[event.carName];
+            const laneWidth = laneWidths[event.carName] ?? 0;
+            const distance = (event.toPosition / maxPosition) * laneWidth;
+            if (carEl) {
+                carEl.style.left = `${16 + distance}px`;
+            }
+            if (posEl) {
+                posEl.textContent = `${event.toPosition}칸`;
+            }
+
+            index += 1;
+            setTimeout(step, 1100);
+        }
+
+        diceNumberEl.textContent = '🎲';
+        diceStatusEl.textContent = '주사위를 굴려요!';
+        updateDiceFace(0);
+        roundIndicatorEl.textContent = `Round 0 / ${totalRounds}`;
+
+        setTimeout(step, 400);
+    }
+
+    replayButton?.addEventListener('click', playRace);
+    playRace();
+})();
+</script>
 </body>
 </html>

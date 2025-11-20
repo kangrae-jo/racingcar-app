@@ -20,6 +20,9 @@ class RaceController(
         if (!model.containsAttribute("request")) {
             model.addAttribute("request", RaceRequest())
         }
+        if (!model.containsAttribute("carNames")) {
+            model.addAttribute("carNames", emptyList<String>())
+        }
         return "race"
     }
 
@@ -31,16 +34,22 @@ class RaceController(
     ): String {
         if (bindingResult.hasErrors()) {
             model.addAttribute("result", null)
+            model.addAttribute("carNames", emptyList<String>())
             return "race"
         }
 
         return try {
             val result = raceService.runRace(request)
             model.addAttribute("result", result)
+            model.addAttribute(
+                "carNames",
+                result.rounds.firstOrNull()?.cars?.map { it.name } ?: emptyList<String>(),
+            )
             model.addAttribute("errorMessage", null)
             "race"
         } catch (exception: IllegalArgumentException) {
             model.addAttribute("result", null)
+            model.addAttribute("carNames", emptyList<String>())
             model.addAttribute("errorMessage", exception.message ?: "유효하지 않은 입력입니다.")
             "race"
         }

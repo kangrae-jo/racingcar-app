@@ -1,6 +1,7 @@
 package be.racingcar.domain.car
 
 import be.racingcar.domain.car.dto.CarDto
+import be.racingcar.domain.car.dto.CarMoveResult
 import be.racingcar.domain.car.dto.WinnerDto
 import be.racingcar.domain.random.Dice
 
@@ -14,10 +15,17 @@ class Cars(names: String) {
         cars = splitNames.map(::Car)
     }
 
-    fun moveAll(dice: Dice) {
-        cars.forEach { car ->
-            dice.reroll()
+    fun moveAll(dice: Dice): List<CarMoveResult> {
+        return cars.map { car ->
+            val before = car.getPosition()
+            val roll = dice.reroll()
             car.attemptToMove(dice)
+            CarMoveResult(
+                name = car.getName(),
+                fromPosition = before,
+                toPosition = car.getPosition(),
+                diceValue = roll,
+            )
         }
     }
 
