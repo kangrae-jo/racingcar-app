@@ -92,7 +92,8 @@
             box-shadow: 0 0 0 3px rgba(107, 99, 255, 0.25);
         }
 
-        button {
+        button,
+        .start-button {
             border: none;
             border-radius: 12px;
             padding: 0.95rem 1.5rem;
@@ -104,9 +105,18 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        button:hover {
+        button:hover,
+        .start-button:hover {
             transform: translateY(-1px);
             box-shadow: 0 10px 20px rgba(91, 83, 255, 0.25);
+        }
+
+        .start-button[disabled] {
+            cursor: not-allowed;
+            background: #c6c9e8;
+            color: #f4f5ff;
+            box-shadow: none;
+            transform: none;
         }
 
         .error {
@@ -381,11 +391,25 @@
             display: flex;
         }
 
-        #replayButton {
+        .lock-notice {
+            grid-column: 1 / -1;
+            margin: 0;
+            font-size: 0.9rem;
+            color: #b84c4c;
+            display: none;
+        }
+
+        .lock-notice.visible {
+            display: block;
+        }
+
+        #replayButton,
+        #startRaceButton {
             background: #15172c;
         }
 
-        #replayButton:hover {
+        #replayButton:hover,
+        #startRaceButton:hover {
             box-shadow: 0 10px 20px rgba(21, 23, 44, 0.35);
         }
 
@@ -411,7 +435,7 @@
     <h1>레이싱카 게임</h1>
     <p>자동차 이름(최대 5글자)을 쉼표로 구분하고 라운드를 선택한 뒤, 주사위를 굴리듯 경주를 즐겨보세요.</p>
 
-    <form th:action="@{/race}" th:object="${request}" method="post">
+    <form th:action="@{/race}" th:object="${request}" method="post" id="raceForm">
         <div class="field">
             <label for="carNames">자동차 이름</label>
             <input id="carNames" type="text" th:field="*{carNames}" placeholder="pobi,woni,jun"/>
@@ -422,7 +446,8 @@
             <input id="totalRound" type="number" min="1" max="1000" th:field="*{totalRound}" placeholder="5"/>
             <div class="error" th:if="${#fields.hasErrors('totalRound')}" th:errors="*{totalRound}">라운드 입력 오류</div>
         </div>
-        <button type="submit">경주 시작</button>
+        <button type="submit" id="startRaceButton" class="start-button">경주 시작</button>
+        <p class="lock-notice" id="raceLockNotice">경주가 진행 중입니다. 종료 후 다시 실행할 수 있어요.</p>
     </form>
 
     <div class="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">문제가 발생했습니다.</div>
@@ -490,6 +515,11 @@
     const replayButton = document.getElementById('replayButton');
     const winnerNamesEl = document.getElementById('winnerNames');
     const winnersPlaceholderEl = document.getElementById('winnersPlaceholder');
+    const raceForm = document.getElementById('raceForm');
+    const startRaceButton = document.getElementById('startRaceButton');
+    const raceLockNotice = document.getElementById('raceLockNotice');
+    let isPlaying = false;
+    let playbackTimeoutId = null;
 
     const pipMap = {
         0: [],
@@ -545,6 +575,21 @@
         diceVisualEl.classList.add('rolling');
     }
 
+    function setRaceLock(locked) {
+        if (startRaceButton) {
+            startRaceButton.disabled = locked;
+        }
+        if (raceLockNotice) {
+            raceLockNotice.classList.toggle('visible', locked);
+        }
+    }
+
+    raceForm?.addEventListener('submit', (event) => {
+        if (isPlaying) {
+            event.preventDefault();
+        }
+    });
+
     function playRace() {
         resetCars();
         if (winnersPlaceholderEl) {
@@ -553,12 +598,20 @@
         if (winnerNamesEl) {
             winnerNamesEl.classList.remove('visible');
         }
+        if (playbackTimeoutId) {
+            clearTimeout(playbackTimeoutId);
+            playbackTimeoutId = null;
+        }
         const queue = Array.isArray(raceData.events)
             ? raceData.events.slice()
             : [];
         if (queue.length === 0) {
+            isPlaying = false;
+            setRaceLock(false);
             return;
         }
+        isPlaying = true;
+        setRaceLock(true);
         let index = 0;
         let currentRound = 0;
         const totalRounds = raceData.rounds.length;
@@ -574,6 +627,8 @@
                 if (winnerNamesEl) {
                     winnerNamesEl.classList.add('visible');
                 }
+                isPlaying = false;
+                setRaceLock(false);
                 return;
             }
 
@@ -603,7 +658,7 @@
             }
 
             index += 1;
-            setTimeout(step, 1100);
+            playbackTimeoutId = window.setTimeout(step, 1100);
         }
 
         diceNumberEl.textContent = '🎲';
@@ -611,9 +666,10 @@
         updateDiceFace(0);
         roundIndicatorEl.textContent = `Round 0 / ${totalRounds}`;
 
-        setTimeout(step, 400);
+        playbackTimeoutId = window.setTimeout(step, 400);
     }
 
+    setRaceLock(false);
     replayButton?.addEventListener('click', playRace);
     playRace();
 })();
