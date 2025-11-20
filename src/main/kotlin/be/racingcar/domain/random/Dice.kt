@@ -1,6 +1,6 @@
 package be.racingcar.domain.random
 
-import camp.nextstep.edu.missionutils.Randoms
+import be.racingcar.util.Randoms
 
 class Dice {
 

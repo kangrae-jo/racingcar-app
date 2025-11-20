@@ -23,8 +23,8 @@ class Round(totalRound: String) {
     }
 
     private fun validateTotalRound(round: Int) {
-        if (round < MIN_ROUND || round > MAX_ROUND) {
-            throw IllegalArgumentException("[ERROR] 라운드는 ${MIN_ROUND} 이상 ${MAX_ROUND} 이하만 가능합니다.")
+        if (round !in MIN_ROUND..MAX_ROUND) {
+            throw IllegalArgumentException("[ERROR] 라운드는 $MIN_ROUND 이상 $MAX_ROUND 이하만 가능합니다.")
         }
     }
 

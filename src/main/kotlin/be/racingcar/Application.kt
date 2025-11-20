@@ -1,10 +1,10 @@
 package be.racingcar
 
-import camp.nextstep.edu.missionutils.Console
 import be.racingcar.controller.RaceController
 import be.racingcar.domain.car.Cars
 import be.racingcar.domain.random.Dice
 import be.racingcar.domain.round.Round
+import be.racingcar.util.Console
 import be.racingcar.view.InputView
 
 fun main() {
