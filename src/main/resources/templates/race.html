@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>레이싱카 게임</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h1, h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            padding: 0.65rem 0.8rem;
+            border: 1px solid #cfd7df;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            border-color: #6c63ff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+        }
+
+        button {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #6c63ff;
+            color: #fff;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #5547f0;
+        }
+
+        .error {
+            color: #d7263d;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #ffcdd2;
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+
+        .round-card {
+            border: 1px solid #e0e4ec;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fafbff;
+        }
+
+        .round-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: #555;
+        }
+
+        .car-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .car-name {
+            width: 70px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .track {
+            flex: 1;
+            height: 8px;
+            background-color: #e9ecf5;
+            border-radius: 999px;
+            position: relative;
+        }
+
+        .marker {
+            position: absolute;
+            top: -3px;
+            height: 14px;
+            background: linear-gradient(90deg, #6c63ff, #5ed1ff);
+            border-radius: 999px;
+        }
+
+        .distance {
+            font-size: 0.85rem;
+            color: #666;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .winners {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e4ec;
+        }
+
+        .winner-name {
+            display: inline-block;
+            background-color: #eef1ff;
+            color: #4b4dff;
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>레이싱카 게임</h1>
+    <p>자동차 이름(최대 5글자)을 쉼표로 구분해 입력하고 라운드를 선택한 뒤 경주를 실행해보세요.</p>
+
+    <form th:action="@{/race}" th:object="${request}" method="post">
+        <div>
+            <label for="carNames">자동차 이름</label>
+            <input id="carNames" type="text" th:field="*{carNames}" placeholder="pobi,woni,jun"/>
+            <div class="error" th:if="${#fields.hasErrors('carNames')}" th:errors="*{carNames}">자동차 이름 오류</div>
+        </div>
+        <div>
+            <label for="totalRound">라운드 수</label>
+            <input id="totalRound" type="number" min="1" max="1000" th:field="*{totalRound}" placeholder="5"/>
+            <div class="error" th:if="${#fields.hasErrors('totalRound')}" th:errors="*{totalRound}">라운드 입력 오류</div>
+        </div>
+        <button type="submit">경주 시작</button>
+    </form>
+
+    <div class="alert" th:if="${errorMessage != null}" th:text="${errorMessage}">문제가 발생했습니다.</div>
+
+    <div class="results" th:if="${result != null}">
+        <h2>라운드 결과</h2>
+        <div th:each="round : ${result.rounds}" class="round-card">
+            <div class="round-title" th:text="|Round ${round.round}|">Round</div>
+            <div th:each="car : ${round.cars}" class="car-row">
+                <span class="car-name" th:text="${car.name}">pobi</span>
+                <div class="track">
+                    <div class="marker" th:style="'width:' + (${car.position} * 20) + 'px'"></div>
+                </div>
+                <span class="distance" th:text="|${car.position}칸|">0칸</span>
+            </div>
+        </div>
+
+        <div class="winners">
+            <h2>우승자</h2>
+            <div th:each="winner : ${result.winners}" class="winner-name" th:text="${winner.name}">pobi</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
