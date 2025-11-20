@@ -30,4 +30,5 @@ class ApiExceptionHandler {
         )
         return ResponseEntity.badRequest().body(response)
     }
+
 }

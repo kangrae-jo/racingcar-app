@@ -33,6 +33,7 @@ class RaceController(
             model.addAttribute("result", null)
             return "race"
         }
+
         return try {
             val result = raceService.runRace(request)
             model.addAttribute("result", result)

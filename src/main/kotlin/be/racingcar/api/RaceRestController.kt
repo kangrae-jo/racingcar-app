@@ -19,4 +19,5 @@ class RaceRestController(
     fun runRace(@Valid @RequestBody request: RaceRequest): RaceResult {
         return raceService.runRace(request)
     }
+
 }

@@ -1,6 +1,5 @@
 package be.racingcar.util
 
-import java.util.Collections
 import java.util.concurrent.ThreadLocalRandom
 
 object Randoms {
