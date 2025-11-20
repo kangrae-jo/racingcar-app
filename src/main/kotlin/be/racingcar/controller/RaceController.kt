@@ -1,7 +1,7 @@
 package be.racingcar.controller
 
-import be.racingcar.application.RaceService
-import be.racingcar.application.dto.RaceRequest
+import be.racingcar.service.RaceService
+import be.racingcar.dto.RaceRequest
 import jakarta.validation.Valid
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model

@@ -1,8 +1,8 @@
 package be.racingcar.api
 
-import be.racingcar.application.RaceService
-import be.racingcar.application.dto.RaceRequest
-import be.racingcar.application.dto.RaceResult
+import be.racingcar.service.RaceService
+import be.racingcar.dto.RaceRequest
+import be.racingcar.dto.RaceResult
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
