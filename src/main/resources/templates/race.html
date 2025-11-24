@@ -178,6 +178,17 @@
             animation: diceRoll 0.6s ease;
         }
 
+        .dice-visual.success {
+            box-shadow: 0 0 18px rgba(64, 201, 107, 0.6);
+            border-color: rgba(47, 161, 88, 0.7);
+        }
+
+        .dice-visual.fail {
+            box-shadow: 0 0 12px rgba(150, 152, 170, 0.6);
+            border-color: rgba(137, 139, 158, 0.7);
+            background: radial-gradient(circle at 30% 30%, #f4f5fb, #e6e8f5);
+        }
+
         .pip {
             width: 11px;
             height: 11px;
@@ -189,6 +200,24 @@
         }
 
         .pip.visible {
+            opacity: 1;
+        }
+
+        .dice-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: rgba(223, 67, 67, 0.9);
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .dice-overlay.visible {
             opacity: 1;
         }
 
@@ -359,38 +388,6 @@
             color: #6b63ff;
         }
 
-        .winners {
-            margin-top: 1.5rem;
-            padding-top: 1.2rem;
-            border-top: 1px solid #dfe2ff;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .winner-chip {
-            padding: 0.35rem 0.9rem;
-            background: rgba(107, 99, 255, 0.1);
-            border-radius: 999px;
-            color: #4b4dff;
-            font-weight: 600;
-        }
-
-        .winner-placeholder {
-            font-size: 0.95rem;
-            color: #8587a3;
-        }
-
-        .winner-names {
-            display: none;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .winner-names.visible {
-            display: flex;
-        }
-
         .lock-notice {
             grid-column: 1 / -1;
             margin: 0;
@@ -401,6 +398,82 @@
 
         .lock-notice.visible {
             display: block;
+        }
+
+        .winner-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 12, 32, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .winner-modal.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            position: relative;
+            background: #ffffff;
+            padding: 2.5rem 3rem;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(11, 13, 40, 0.4);
+            overflow: hidden;
+        }
+
+        .modal-content h2 {
+            margin: 0 0 1rem;
+            font-size: 2rem;
+            color: #3d3f7a;
+        }
+
+        .modal-content p {
+            margin: 0 0 1.5rem;
+            font-size: 1.1rem;
+            color: #606283;
+        }
+
+        #winnerNamesText {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #26235c;
+        }
+
+        #resetRaceButton {
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #ff6a88, #ff99ac);
+        }
+
+        #resetRaceButton:hover {
+            box-shadow: 0 10px 20px rgba(255, 106, 136, 0.35);
+        }
+
+        .confetti-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 16px;
+            opacity: 0.9;
+            border-radius: 2px;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-120%) rotate(0deg);
+            }
+            100% {
+                transform: translateY(120vh) rotate(360deg);
+            }
         }
 
         #replayButton,
@@ -433,7 +506,8 @@
 <body>
 <div class="container">
     <h1>레이싱카 게임</h1>
-    <p>자동차 이름(최대 5글자)을 쉼표로 구분하고 라운드를 선택한 뒤, 주사위를 굴리듯 경주를 즐겨보세요.</p>
+    <p>자동차 이름(최대 5글자)을 쉼표로 구분하고 라운드를 선택한 뒤, 주사위를 굴려 경주를 즐겨보세요.</p>
+    <p> 주사위 값이 4 이상이면 앞으로 전진합니다.</p>
 
     <form th:action="@{/race}" th:object="${request}" method="post" id="raceForm">
         <div class="field">
@@ -466,6 +540,7 @@
                     <span class="pip" data-pip="bottom-left"></span>
                     <span class="pip" data-pip="bottom-center"></span>
                     <span class="pip" data-pip="bottom-right"></span>
+                    <div class="dice-overlay" id="diceOverlay">×</div>
                 </div>
                 <div class="dice-info">
                     <div class="dice-number" id="diceNumber">-</div>
@@ -487,13 +562,16 @@
             </div>
         </div>
 
-        <div class="winners">
-            <strong>우승자</strong>
-            <div class="winner-placeholder" id="winnersPlaceholder">경주가 끝나면 공개됩니다.</div>
-            <div class="winner-names" id="winnerNames">
-                <span th:each="winner : ${result.winners}" class="winner-chip" th:text="${winner.name}">pobi</span>
-            </div>
-        </div>
+    </div>
+</div>
+
+<div class="winner-modal" id="winnerModal">
+    <div class="confetti-container" id="confettiContainer"></div>
+    <div class="modal-content">
+        <h2>🎉 우승자를 축하합니다! 🎉</h2>
+        <p>이번 경주에서 가장 멋진 주행을 보여준 자동차는</p>
+        <div id="winnerNamesText">pobi</div>
+        <button type="button" id="resetRaceButton">다시하기</button>
     </div>
 </div>
 
@@ -511,10 +589,13 @@
     const diceNumberEl = document.getElementById('diceNumber');
     const diceStatusEl = document.getElementById('diceStatus');
     const diceVisualEl = document.getElementById('diceVisual');
+    const diceOverlayEl = document.getElementById('diceOverlay');
     const roundIndicatorEl = document.getElementById('roundIndicator');
     const replayButton = document.getElementById('replayButton');
-    const winnerNamesEl = document.getElementById('winnerNames');
-    const winnersPlaceholderEl = document.getElementById('winnersPlaceholder');
+    const winnerModal = document.getElementById('winnerModal');
+    const winnerNamesText = document.getElementById('winnerNamesText');
+    const resetRaceButton = document.getElementById('resetRaceButton');
+    const confettiContainer = document.getElementById('confettiContainer');
     const raceForm = document.getElementById('raceForm');
     const startRaceButton = document.getElementById('startRaceButton');
     const raceLockNotice = document.getElementById('raceLockNotice');
@@ -529,6 +610,9 @@
         4: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
         5: ['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'],
         6: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right'],
+        7: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right', 'center'],
+        8: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right', 'center', 'top-center'],
+        9: ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right', 'center', 'top-center', 'bottom-center'],
     };
 
     const carElements = {};
@@ -548,6 +632,7 @@
     const maxPosition = (raceData.events ?? []).reduce((max, event) => {
         return Math.max(max, event.toPosition);
     }, 0) || 1;
+    const scaledMaxPosition = maxPosition * 1.5 || 1;
 
     function resetCars() {
         Object.entries(carElements).forEach(([name, element]) => {
@@ -559,20 +644,29 @@
         });
     }
 
-    function updateDiceFace(value) {
+    function updateDiceFace(value, showZeroOverlay = true) {
         if (!diceVisualEl) {
             return;
         }
-        const normalized = value <= 0 ? 0 : Math.min(value, 6);
+        const normalized = value <= 0 ? 0 : Math.min(value, 9);
         const active = pipMap[normalized] ?? [];
         const elements = diceVisualEl.querySelectorAll('.pip');
         elements.forEach((pip) => {
             pip.classList.toggle('visible', active.includes(pip.dataset.pip));
         });
-        diceVisualEl.classList.remove('rolling');
+        diceVisualEl.classList.remove('rolling', 'success', 'fail');
         // force reflow
         void diceVisualEl.offsetWidth;
         diceVisualEl.classList.add('rolling');
+        if (value >= 4) {
+            diceVisualEl.classList.add('success');
+        } else if (value > 0) {
+            diceVisualEl.classList.add('fail');
+        }
+        if (diceOverlayEl) {
+            const shouldShow = showZeroOverlay && value === 0;
+            diceOverlayEl.classList.toggle('visible', shouldShow);
+        }
     }
 
     function setRaceLock(locked) {
@@ -592,12 +686,6 @@
 
     function playRace() {
         resetCars();
-        if (winnersPlaceholderEl) {
-            winnersPlaceholderEl.style.display = '';
-        }
-        if (winnerNamesEl) {
-            winnerNamesEl.classList.remove('visible');
-        }
         if (playbackTimeoutId) {
             clearTimeout(playbackTimeoutId);
             playbackTimeoutId = null;
@@ -615,18 +703,14 @@
         let index = 0;
         let currentRound = 0;
         const totalRounds = raceData.rounds.length;
+        let lastRound = 1;
 
         function step() {
             if (index >= queue.length) {
                 diceNumberEl.textContent = '✔';
                 diceStatusEl.textContent = '경주가 종료되었습니다!';
-                updateDiceFace(0);
-                if (winnersPlaceholderEl) {
-                    winnersPlaceholderEl.style.display = 'none';
-                }
-                if (winnerNamesEl) {
-                    winnerNamesEl.classList.add('visible');
-                }
+                updateDiceFace(0, false);
+                showWinnerModal();
                 isPlaying = false;
                 setRaceLock(false);
                 return;
@@ -636,6 +720,12 @@
             if (event.round !== currentRound) {
                 currentRound = event.round;
                 roundIndicatorEl.textContent = `Round ${currentRound} / ${totalRounds}`;
+                if (currentRound != lastRound) {
+                    playbackTimeoutId = window.setTimeout(step, 1000);
+                    lastRound = currentRound;
+                    return;
+                }
+                lastRound = currentRound;
             }
 
             const moved = event.toPosition > event.fromPosition;
@@ -644,12 +734,12 @@
             diceStatusEl.textContent = moved
                 ? `${event.carName} 전진!`
                 : `${event.carName} 정지...`;
-            updateDiceFace(diceNumber);
+            updateDiceFace(diceNumber, true);
 
             const carEl = carElements[event.carName];
             const posEl = positionElements[event.carName];
             const laneWidth = laneWidths[event.carName] ?? 0;
-            const distance = (event.toPosition / maxPosition) * laneWidth;
+            const distance = (event.toPosition / scaledMaxPosition) * laneWidth;
             if (carEl) {
                 carEl.style.left = `${16 + distance}px`;
             }
@@ -663,11 +753,60 @@
 
         diceNumberEl.textContent = '🎲';
         diceStatusEl.textContent = '주사위를 굴려요!';
-        updateDiceFace(0);
+        updateDiceFace(0, false);
         roundIndicatorEl.textContent = `Round 0 / ${totalRounds}`;
 
         playbackTimeoutId = window.setTimeout(step, 400);
     }
+
+    function showWinnerModal() {
+        if (!winnerModal) {
+            return;
+        }
+        const winners = Array.isArray(raceData.winners)
+            ? raceData.winners.map((winner) => winner.name)
+            : [];
+        winnerNamesText.textContent = winners.length > 0
+            ? winners.join(', ')
+            : '우승자 없음';
+        winnerModal.classList.add('visible');
+        renderConfetti();
+    }
+
+    function renderConfetti() {
+        if (!confettiContainer) {
+            return;
+        }
+        confettiContainer.innerHTML = '';
+        const colors = ['#ff6b6b', '#ffd93d', '#6bcff6', '#51e3a2', '#ff9de2'];
+        const pieces = 40;
+        for (let i = 0; i < pieces; i += 1) {
+            const piece = document.createElement('span');
+            piece.classList.add('confetti-piece');
+            const color = colors[i % colors.length];
+            piece.style.backgroundColor = color;
+            piece.style.left = `${Math.random() * 100}%`;
+            piece.style.animationDelay = `${Math.random() * 2}s`;
+            piece.style.animationDuration = `${2 + Math.random() * 2}s`;
+            piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+            confettiContainer.appendChild(piece);
+        }
+    }
+
+    resetRaceButton?.addEventListener('click', () => {
+        winnerModal?.classList.remove('visible');
+        raceForm?.reset();
+        const carInput = document.getElementById('carNames');
+        const roundInput = document.getElementById('totalRound');
+        if (carInput) {
+            carInput.value = '';
+            carInput.focus();
+        }
+        if (roundInput) {
+            roundInput.value = '';
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     setRaceLock(false);
     replayButton?.addEventListener('click', playRace);
