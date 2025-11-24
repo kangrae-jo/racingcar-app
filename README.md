@@ -1,6 +1,6 @@
 # 🏁 Racingcar Web (Kotlin & Docker)
 
-> **콘솔 레이싱카 미션을 웹 서비스로 확장하며,  
+> **우태코 프리코스 콘솔 레이싱카 미션을 웹 서비스로 확장하며,  
 > 객체지향 설계 · Kotlin 전환 · Docker 기반 배포 · GitHub Actions CI/CD 를 한 번에 경험한 학습용 프로젝트입니다.**
 
 <br>
