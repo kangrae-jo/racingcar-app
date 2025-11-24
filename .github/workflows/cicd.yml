@@ -2,7 +2,9 @@ name: CI/CD - racingcar-app
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - "main"
+      - "release"
   workflow_dispatch:
 
 jobs:
@@ -52,6 +54,7 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/release'
 
     steps:
       - name: Deploy to GCP VM via SSH
